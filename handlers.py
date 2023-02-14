@@ -17,11 +17,6 @@ class UserStartedTypingEvent(AbstractEvent):
     event_type = EventType.USER_FINISHED_TYPING
     scope: Scope
 
-@EventConveyor.event
-class WorldCollapsedEvent(AbstractEvent):
-    event_type = EventType.USER_FINISHED_TYPING
-    scope: Scope
-
 
 @EventConveyor.handler
 def new_message_handler(event: NewMessageEvent):
@@ -29,12 +24,12 @@ def new_message_handler(event: NewMessageEvent):
     return 'ok'
 
 
-@EventConveyor.handler
-def user_started_typing(event: UserStartedTypingEvent):
-    print("user_started_typing")
-    return 'ok'
+# @EventConveyor.handler
+# def user_started_typing(event: UserStartedTypingEvent):
+#     print("user_started_typing")
+#     return 'ok'
 
-@EventConveyor.handler
-def user_started_typing(event: WorldCollapsedEvent):
-    print("WORLD COLLAPSED")
-    return 'ok'
+# @EventConveyor.handler
+# def user_started_typing(event: WorldCollapsedEvent):
+#     print("WORLD COLLAPSED")
+#     return 'ok'

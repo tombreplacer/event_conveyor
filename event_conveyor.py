@@ -1,11 +1,11 @@
 from abc import ABC
 from enum import Enum
 from functools import wraps
-
+import inspect
 from pydantic import BaseModel
 
 __handlers__ = []
-__events__ = []
+__events__ = {}
 
 class EventType(str, Enum):
     USER_STARTED_TYPING = "USER_STARTED_TYPING"
@@ -21,7 +21,7 @@ class Scope(BaseModel):
     scope_type: ScopeType
     target_id: str | None
 
-class AbstractEvent(ABC, BaseModel):
+class AbstractEvent(BaseModel):
     event_type: EventType
     scope: Scope
 
@@ -41,6 +41,34 @@ class EventConveyor:
         return resp_dict
 
     @staticmethod
+    def event(cls:type):
+        if not issubclass(cls, AbstractEvent):
+            raise Exception("Provided object is not an event")
+        EventConveyor.register_event(cls)
+        print('@event registered %s' % cls.__name__)
+        return cls
+    
+    @staticmethod
+    def register_event(cls: type):
+        key = cls.__fields__["event_type"].default
+        if key in __events__:
+            raise Exception("Only one event class per event type is allowed. %s already used in %s" % (key, __events__[key].__name__))
+        else:
+            __events__[key] = cls
+
+    @staticmethod
+    def deserealize_event(event: dict) -> AbstractEvent:
+        if not "event_type" in event:
+            raise Exception("Provided object is not an event because misssing field 'event_type'")
+        key = event["event_type"] 
+        if not key in __events__:
+            raise Exception("Event of type %s is not registered make sure you have declared subclass of AbstractEvent and decorated it with @EventConveyor.event", key)
+        deserealizer = __events__[key]
+        result = deserealizer.parse_obj(event)
+        return result
+
+
+    @staticmethod
     def handler(order = 0,entity_type:type=None):
         def decorator_func(handler):
             # EventConveyor.register_handler(handler=handler,order=order,entity_type=entity_type)
@@ -48,51 +76,17 @@ class EventConveyor:
         return decorator_func
 
     @staticmethod
-    def event(msg='default'):
-        def decorator(klass):
-            old_foo = klass.foo
-            @wraps(klass.foo)
-            def decorated_foo(self, *args ,**kwargs):
-                print('@decorator pre %s' % msg)
-                old_foo(self, *args, **kwargs)
-                print('@decorator post %s' % msg)
-            klass.foo = decorated_foo
-            return klass
-        return decorator
-    
-    @staticmethod
-    def deserealize_event(msg='default') -> AbstractEvent:
-        def decorator(klass):
-            old_foo = klass.foo
-            @wraps(klass.foo)
-            def decorated_foo(self, *args ,**kwargs):
-                print('@decorator pre %s' % msg)
-                old_foo(self, *args, **kwargs)
-                print('@decorator post %s' % msg)
-            klass.foo = decorated_foo
-            return klass
-        return decorator
-    
-
-    @staticmethod
-    def register_handler(handler,group:str=None,order = 0,entity_type:type=None,payload_type:type=None):
-        """
-        Append handler method
-        Args:
-            handler (`function` or `class`): Handler type.
-            group (`str`, optional): Grouping name to split handlers of same entity and payload to manage starting cases.
-            entity_type (`type`, optional): base or concrete class of entity.
-            payload_type (`type`, optional): base or concrete class of payload.
-        """
-
-        handler_func = None
-        is_class = False
+    def register_handler(handler,order = 0,event_type:type=None):
+        if not inspect.isfunction:
+            raise Exception("Handler should be a function")
+        if not issubclass(event_type, AbstractEvent):
+            raise Exception("Handler event_type argument should")
         if not inspect.isfunction(handler):
             if(hasattr( handler, 'process' ) and callable( handler.process )):
                 handler_func = handler.process
                 is_class=True
             else:
-                raise ValueError("Handler must be a function or a class that contains 'process' method. {function}".format(function = handler))
+                raise Exception("Handler must be a function or a class that contains 'process' method. {function}".format(function = handler))
         else:
             handler_func=handler
         sign = inspect.signature(handler_func)
@@ -119,7 +113,9 @@ class EventConveyor:
             __handlers__.append({"handler":handler,"iscoroutine":inspect.iscoroutinefunction(handler),"isclass":inspect.isclass(handler),"entity_type":entity_type,"payload_type":payload_type,"group":group,"order":order})
 
 
-
+    @staticmethod
+    def find_handler():
+        print("find handler")
 
 class EventBus:
     conveyor = EventConveyor()
