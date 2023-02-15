@@ -41,21 +41,23 @@ class UserStartedTypingEvent(AbstractEvent):
     scope: Scope
 
 
-@EventConveyor.handler(order=1)
+@EventConveyor.handler
 def new_message_handler1(event: NewMessageEvent):
     print("new_message_handler success 1")
     print(event)
-    return 'ok'
+    return 'ok1'
 
 @EventConveyor.handler(order=-5)
 def new_message_handler2(event: NewMessageEvent):
     print("new_message_handler success -5")
-    return 'ok'
+    print(event)
+    return 'ok-5'
 
 @EventConveyor.handler(order=50)
-def new_message_handler2(event: NewMessageEvent):
+def new_message_handler3(event: NewMessageEvent):
     print("new_message_handler success 50")
-    return 'ok'
+    print(event)
+    return 'ok50'
 
 # @EventConveyor.handler
 # def user_started_typing(event: UserStartedTypingEvent):

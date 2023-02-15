@@ -64,13 +64,18 @@ class EventConveyor:
 
 
     @staticmethod
-    def handler(order = 0):
-        def decorator(handler_func):
+    def handler(handler_func = None, order = 0):
+        def decorated_func(event):
+            return handler_func
+        if handler_func:
             EventConveyor.register_handler(handler_func, order)
-            print('@handler registered "%s"' % handler_func.__name__)
-            def decorator_func(handler):
-                return handler
-        return decorator
+            return decorated_func
+        else:
+            def decorator_factory(handler_func):
+                EventConveyor.register_handler(handler_func, order)
+                print('@handler registered "%s"' % handler_func.__name__)
+                return decorated_func
+            return decorator_factory
 
 
     @staticmethod
@@ -108,4 +113,5 @@ class EventBus:
     conveyor = EventConveyor()
 
     def put(self, event: AbstractEvent):
-        self.conveyor.process(event)
+        results = self.conveyor.process(event)
+        print(results)
