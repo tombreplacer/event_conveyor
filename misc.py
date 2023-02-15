@@ -51,3 +51,30 @@ def get_event_as_dict_bad():
         "hello": "WORLD",
     }
     return result
+
+
+
+def get_event_as_dict6():
+    result = {
+        "event_type": "ZALUPA",
+        "scope": {
+            "scope_type": "ROOM",
+            "target_id": "123"
+        },
+        "message": {
+            "id": "333",
+            "text": "text-text-text"
+        }
+    }
+    return result
+
+
+
+
+
+# @staticmethod
+# def handler(group:str=None,order = 0,entity_type:type=None,payload_type:type=None):
+#     def decorator_func(handler):
+#         Conveyor.register_handler(handler=handler,group=group,order=order,entity_type=entity_type,payload_type=payload_type)
+#         return handler
+#     return decorator_func
